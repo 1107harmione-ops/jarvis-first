@@ -20,7 +20,7 @@ from enum import Enum
 from typing import Any, Callable
 
 from backend.config.settings import settings
-from backend.database.mongodb import db
+from backend.database.mongodb import mongodb
 from backend.database.schemas import now_utc
 
 logger = logging.getLogger("jarvis.offline_handler")
@@ -164,7 +164,7 @@ class OfflineHandler:
     async def _check_database_connectivity(self) -> bool:
         """Check if MongoDB is reachable."""
         try:
-            await db.admin.command("ping")
+            await mongodb.db.admin.command("ping")
             return True
         except Exception:
             return False
@@ -216,7 +216,7 @@ class OfflineHandler:
             "queued_while_offline": True,
         }
 
-        result = await db.offline_queue.insert_one(doc)
+        result = await mongodb.offline_queue.insert_one(doc)
         logger.info(
             "Queued offline command for user %s: %s",
             user_id,
@@ -231,7 +231,7 @@ class OfflineHandler:
     ) -> list[dict[str, Any]]:
         """Get queued commands for a user."""
         cursor = (
-            db.offline_queue.find({
+            mongodb.offline_queue.find({
                 "user_id": user_id,
                 "status": status,
             })
@@ -277,7 +277,7 @@ class OfflineHandler:
                     )
 
                     # Mark as processed
-                    await db.offline_queue.update_one(
+                    await mongodb.offline_queue.update_one(
                         {"_id": cmd["id"]},
                         {
                             "$set": {
@@ -291,7 +291,7 @@ class OfflineHandler:
 
                 except Exception as e:
                     logger.error("Failed to process queued command %s: %s", cmd["id"], e)
-                    await db.offline_queue.update_one(
+                    await mongodb.offline_queue.update_one(
                         {"_id": cmd["id"]},
                         {"$set": {"status": "failed", "error": str(e)}},
                     )

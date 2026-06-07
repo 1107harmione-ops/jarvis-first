@@ -16,9 +16,9 @@ from __future__ import annotations
 import time
 from typing import Any, Dict, List, Optional
 
-from agents_v2.state import AgentState, ExecutionStatus
-from agents_v2.base import BaseAgent
-from llm.deepseek import deepseek
+from backend.agents_v2.state import AgentState, ExecutionStatus
+from backend.agents_v2.base import BaseAgent
+from backend.llm.deepseek import deepseek
 
 
 class ResponseAgent(BaseAgent):

@@ -256,3 +256,110 @@ def new_knowledge_doc(
         "created_at": now_utc(),
         "updated_at": now_utc(),
     }
+
+
+# ── Research ─────────────────────────────────────────────
+
+
+def new_research_report_doc(
+    user_id: str,
+    session_id: str,
+    query: str,
+    research_type: str,
+    depth: str,
+    executive_summary: str = "",
+    key_findings: list[str] | None = None,
+    detailed_analysis: str | None = None,
+    pros: list[str] | None = None,
+    cons: list[str] | None = None,
+    recommendations: list[str] | None = None,
+    conclusions: str | None = None,
+    sources: list[dict[str, Any]] | None = None,
+    fact_check: dict[str, Any] | None = None,
+    metadata: dict[str, Any] | None = None,
+    tags: list[str] | None = None,
+) -> dict[str, Any]:
+    return {
+        "_id": ObjectId(),
+        "user_id": user_id,
+        "session_id": session_id,
+        "title": "",
+        "query": query,
+        "research_type": research_type,
+        "depth": depth,
+        "executive_summary": executive_summary,
+        "key_findings": key_findings or [],
+        "detailed_analysis": detailed_analysis,
+        "pros": pros,
+        "cons": cons,
+        "recommendations": recommendations,
+        "conclusions": conclusions,
+        "sources": sources or [],
+        "source_count": len(sources) if sources else 0,
+        "fact_check": fact_check,
+        "metadata": metadata or {},
+        "tags": tags or [],
+        "created_at": now_utc(),
+        "updated_at": now_utc(),
+    }
+
+
+def new_research_source_doc(
+    url: str,
+    title: str,
+    snippet: str,
+    domain: str,
+    content: str = "",
+    published_date: datetime | None = None,
+    author: str | None = None,
+    authority_score: float = 0.0,
+    freshness_score: float = 0.0,
+    accuracy_score: float = 0.0,
+    relevance_score: float = 0.0,
+    popularity_score: float = 0.0,
+    overall_score: float = 0.0,
+    query: str = "",
+    tags: list[str] | None = None,
+) -> dict[str, Any]:
+    return {
+        "_id": ObjectId(),
+        "url": url,
+        "title": title,
+        "snippet": snippet,
+        "content": content,
+        "domain": domain,
+        "published_date": published_date,
+        "author": author,
+        "authority_score": authority_score,
+        "freshness_score": freshness_score,
+        "accuracy_score": accuracy_score,
+        "relevance_score": relevance_score,
+        "popularity_score": popularity_score,
+        "overall_score": overall_score,
+        "query": query,
+        "tags": tags or [],
+        "access_count": 0,
+        "created_at": now_utc(),
+    }
+
+
+def new_research_cache_doc(
+    cache_key: str,
+    query: str,
+    research_type: str,
+    ttl: datetime,
+    report_id: str | None = None,
+    synthesis: str | None = None,
+    source_urls: list[str] | None = None,
+) -> dict[str, Any]:
+    return {
+        "_id": ObjectId(),
+        "cache_key": cache_key,
+        "query": query,
+        "research_type": research_type,
+        "report_id": report_id,
+        "synthesis": synthesis,
+        "source_urls": source_urls or [],
+        "ttl": ttl,
+        "created_at": now_utc(),
+    }

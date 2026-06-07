@@ -163,6 +163,11 @@ class Settings(BaseSettings):
         default=30, ge=5, description="Background worker poll interval"
     )
 
+    # ── Research ───────────────────────────────────────────
+    RESEARCH_CACHE_TTL_HOURS: int = Field(default=24, ge=1, description="Research cache TTL in hours")
+    RESEARCH_MAX_SOURCES: int = Field(default=50, ge=5, le=200, description="Max sources per research query")
+    RESEARCH_DEFAULT_DEPTH: str = "moderate"
+
     # ── Logging ───────────────────────────────────────────────
     LOG_LEVEL: LogLevel = LogLevel.INFO
     LOG_FORMAT: str = "%(asctime)s | %(levelname)-8s | %(name)s:%(funcName)s:%(lineno)d | %(message)s"

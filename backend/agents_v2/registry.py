@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional, Type
 
-from agents_v2.base import BaseAgent
+from backend.agents_v2.base import BaseAgent
 
 
 class AgentRegistry:

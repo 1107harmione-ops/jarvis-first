@@ -13,7 +13,7 @@ import pytest_asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from backend.config.settings import settings
-from backend.database.mongodb import db
+from backend.database.mongodb import mongodb
 from backend.database.schemas import new_user_doc
 from backend.utils.security import create_access_token, hash_password
 
@@ -46,11 +46,14 @@ async def mongo_client() -> AsyncGenerator[AsyncIOMotorClient[Any], None]:
 
 @pytest_asyncio.fixture(autouse=True)
 async def clean_db(mongo_client: AsyncIOMotorClient[Any]) -> AsyncGenerator[None, None]:
-    """Clean test database before each test."""
-    db_instance = mongo_client[TEST_DB_NAME]
-    collections = await db_instance.list_collection_names()
-    for collection in collections:
-        await db_instance[collection].delete_many({})
+    """Clean test database before each test. Gracefully skips if MongoDB is unavailable."""
+    try:
+        db_instance = mongo_client[TEST_DB_NAME]
+        collections = await db_instance.list_collection_names()
+        for collection in collections:
+            await db_instance[collection].delete_many({})
+    except Exception:
+        pass  # MongoDB not available — skip cleanup
     yield
 
 

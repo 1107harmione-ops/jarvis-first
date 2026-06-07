@@ -25,16 +25,16 @@ import re
 import time
 from typing import Any, Dict, List, Optional
 
-from agents_v2.state import AgentState, ExecutionStatus
-from agents_v2.base import BaseAgent
-from agents_v2.registry import get_agent_registry
-from agents_v2.tools import AgentTools
-from llm.codex import codex
-from llm.minimax import minimax
-from llm.mimo import mimo
-from llm.router import llm_router
-from services.search_service import search_service
-from database.mongodb import mongodb
+from backend.agents_v2.state import AgentState, ExecutionStatus
+from backend.agents_v2.base import BaseAgent
+from backend.agents_v2.registry import get_agent_registry
+from backend.agents_v2.tools import AgentTools
+from backend.llm.codex import codex
+from backend.llm.minimax import minimax
+from backend.llm.mimo import mimo
+from backend.llm.router import llm_router
+from backend.services.search_service import search_service
+from backend.database.mongodb import mongodb
 from config.settings import settings
 
 

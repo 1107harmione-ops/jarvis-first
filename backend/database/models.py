@@ -426,3 +426,106 @@ class SystemHealth(BaseModel):
     uptime_seconds: float
     active_connections: int = 0
     memory_usage_mb: float = 0.0
+
+
+# ── Research ────────────────────────────────────────
+
+
+class ResearchType(str, Enum):
+    QUICK = "quick"
+    DEEP = "deep"
+    COMPARATIVE = "comparative"
+    TECHNICAL = "technical"
+    MARKET = "market"
+    PRODUCT = "product"
+    ARCHITECTURE = "architecture"
+
+
+class ResearchDepth(str, Enum):
+    QUICK = "quick"
+    MODERATE = "moderate"
+    DEEP = "deep"
+    COMPREHENSIVE = "comprehensive"
+
+
+class SourceScore(BaseModel):
+    title: str = ""
+    url: str = ""
+    snippet: str = ""
+    domain: str = ""
+    overall_score: float = 0.0
+    authority_score: float = 0.0
+    freshness_score: float = 0.0
+    relevance_score: float = 0.0
+
+
+class FactCheckResult(BaseModel):
+    verified_claims: list[str] = []
+    contradicted_claims: list[str] = []
+    unverifiable_claims: list[str] = []
+    overall_confidence: float = 0.0
+
+
+class ResearchSearchRequest(BaseModel):
+    query: str = Field(min_length=1, max_length=2000)
+    depth: ResearchDepth = ResearchDepth.QUICK
+    max_sources: int = Field(default=10, ge=3, le=50)
+
+
+class ResearchSearchResponse(BaseModel):
+    query: str
+    research_type: ResearchType
+    answer: str
+    sources: list[SourceScore] = []
+    source_count: int = 0
+    processing_time_ms: float = 0.0
+
+
+class DeepResearchRequest(BaseModel):
+    query: str = Field(min_length=1, max_length=5000)
+    research_type: ResearchType = ResearchType.DEEP
+    depth: ResearchDepth = ResearchDepth.MODERATE
+    max_sources: int = Field(default=20, ge=5, le=100)
+
+
+class DeepResearchResponse(BaseModel):
+    report_id: str
+    title: str = ""
+    research_type: str
+    depth: str
+    executive_summary: str = ""
+    key_findings: list[str] = []
+    detailed_analysis: str | None = None
+    pros: list[str] | None = None
+    cons: list[str] | None = None
+    recommendations: list[str] | None = None
+    conclusions: str | None = None
+    sources: list[SourceScore] = []
+    source_count: int = 0
+    fact_check: FactCheckResult | None = None
+    processing_time_ms: float = 0.0
+    created_at: str = ""
+
+
+class VerifyContentRequest(BaseModel):
+    content: str = Field(min_length=10, max_length=50000)
+    context: str | None = Field(default=None, max_length=5000)
+
+
+class VerifyContentResponse(BaseModel):
+    verified_claims: list[str] = []
+    contradicted_claims: list[str] = []
+    unverifiable_claims: list[str] = []
+    overall_confidence: float = 0.0
+    analysis: str = ""
+
+
+class ResearchReportSummary(BaseModel):
+    """Lightweight summary for history listing."""
+    id: str
+    query: str
+    research_type: str
+    depth: str
+    executive_summary: str = ""
+    source_count: int = 0
+    created_at: str = ""

@@ -18,16 +18,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from agents_v2.state import (
+from backend.agents_v2.state import (
     AgentState,
     ExecutionStatus,
     WorkflowType,
     create_initial_state,
 )
-from agents_v2.registry import AgentRegistry, get_agent_registry
-from agents_v2.base import BaseAgent
-from agents_v2.tools import AgentTools
-from agents_v2.monitor import AgentMonitor, get_agent_monitor
+from backend.agents_v2.registry import AgentRegistry, get_agent_registry
+from backend.agents_v2.base import BaseAgent
+from backend.agents_v2.tools import AgentTools
+from backend.agents_v2.monitor import AgentMonitor, get_agent_monitor
 
 
 # ══════════════════════════════════════════════
@@ -540,7 +540,7 @@ class TestGraphFallbackExecutor:
     @pytest.mark.asyncio
     async def test_fallback_executor_single_agent(self, clean_registry):
         """Verify fallback executor routes to a single agent correctly."""
-        from agents_v2.graph import AgentGraph
+        from backend.agents_v2.graph import AgentGraph
 
         # Register a mock agent
         agent = MagicMock(spec=BaseAgent)
@@ -566,8 +566,8 @@ class TestGraphFallbackExecutor:
     @pytest.mark.asyncio
     async def test_fallback_executor_with_plan(self, clean_registry):
         """Verify fallback executor handles multi-step plans."""
-        from agents_v2.graph import AgentGraph
-        from agents_v2.state import AgentPlanStep
+        from backend.agents_v2.graph import AgentGraph
+        from backend.agents_v2.state import AgentPlanStep
 
         # Register mock agents
         for name in ["research", "coding"]:
@@ -628,29 +628,29 @@ class TestImports:
     """Verify all modules can be imported."""
 
     def test_import_state(self):
-        from agents_v2.state import AgentState, ExecutionStatus, WorkflowType, create_initial_state
+        from backend.agents_v2.state import AgentState, ExecutionStatus, WorkflowType, create_initial_state
         assert AgentState is not None
 
     def test_import_base(self):
-        from agents_v2.base import BaseAgent
+        from backend.agents_v2.base import BaseAgent
         assert BaseAgent is not None
 
     def test_import_registry(self):
-        from agents_v2.registry import AgentRegistry, get_agent_registry
+        from backend.agents_v2.registry import AgentRegistry, get_agent_registry
         assert AgentRegistry is not None
 
     def test_import_tools(self):
-        from agents_v2.tools import AgentTools
+        from backend.agents_v2.tools import AgentTools
         assert AgentTools is not None
 
     def test_import_graph(self):
-        from agents_v2.graph import AgentGraph, create_agent_graph
+        from backend.agents_v2.graph import AgentGraph, create_agent_graph
         assert AgentGraph is not None
 
     def test_import_monitor(self):
-        from agents_v2.monitor import AgentMonitor, get_agent_monitor
+        from backend.agents_v2.monitor import AgentMonitor, get_agent_monitor
         assert AgentMonitor is not None
 
     def test_import_init(self):
-        from agents_v2.init import initialize_agent_system, shutdown_agent_system
+        from backend.agents_v2.init import initialize_agent_system, shutdown_agent_system
         assert initialize_agent_system is not None

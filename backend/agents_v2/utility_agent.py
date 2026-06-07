@@ -23,17 +23,17 @@ import json
 import re
 from typing import Any, Dict, List, Optional, Tuple
 
-from agents_v2.state import AgentState, ExecutionStatus
-from agents_v2.base import BaseAgent
-from agents_v2.registry import get_agent_registry
-from agents_v2.tools import AgentTools
-from llm.deepseek import deepseek
-from database.mongodb import mongodb
+from backend.agents_v2.state import AgentState, ExecutionStatus
+from backend.agents_v2.base import BaseAgent
+from backend.agents_v2.registry import get_agent_registry
+from backend.agents_v2.tools import AgentTools
+from backend.llm.deepseek import deepseek
+from backend.database.mongodb import mongodb
 from memory.short_term import stm
 from memory.long_term import ltm
 from memory.vector_memory import vector_memory
-from services.memory_service import memory_service
-from services.task_service import task_service
+from backend.services.memory_service import memory_service
+from backend.services.task_service import task_service
 from config.settings import settings
 
 

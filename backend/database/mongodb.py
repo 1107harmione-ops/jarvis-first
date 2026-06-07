@@ -138,6 +138,18 @@ class MongoDBManager:
     def offline_queue(self) -> AsyncIOMotorCollection:
         return self.get_collection("offline_queue")
 
+    @property
+    def research_reports(self) -> AsyncIOMotorCollection:
+        return self.get_collection("research_reports")
+
+    @property
+    def research_sources(self) -> AsyncIOMotorCollection:
+        return self.get_collection("research_sources")
+
+    @property
+    def research_cache(self) -> AsyncIOMotorCollection:
+        return self.get_collection("research_cache")
+
     # ── Index Management ───────────────────────────────────────
 
     async def ensure_indexes(self) -> None:
@@ -212,6 +224,23 @@ class MongoDBManager:
                 ("status", 1),
                 ("created_at", 1),
                 [("user_id", 1), ("status", 1)],
+            ],
+            "research_reports": [
+                ("user_id", 1),
+                ("created_at", -1),
+                ("research_type", 1),
+                [("user_id", 1), ("created_at", -1)],
+                [("tags", 1)],
+            ],
+            "research_sources": [
+                ("url", 1),
+                ("domain", 1),
+                ("overall_score", -1),
+                ("created_at", -1),
+            ],
+            "research_cache": [
+                ("cache_key", 1),
+                ("ttl", 1),
             ],
         }
 

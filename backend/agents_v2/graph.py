@@ -17,13 +17,13 @@ from __future__ import annotations
 import time
 from typing import Any, Callable, Dict, Literal, Optional, Tuple
 
-from agents_v2.state import (
+from backend.agents_v2.state import (
     AgentState,
     ExecutionStatus,
     WorkflowType,
     create_initial_state,
 )
-from agents_v2.registry import get_agent_registry
+from backend.agents_v2.registry import get_agent_registry
 
 
 # ──────────────────────────────────────────────

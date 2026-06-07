@@ -14,8 +14,8 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
-from agents_v2.state import AgentState, ExecutionStatus
-from agents_v2.registry import get_agent_registry
+from backend.agents_v2.state import AgentState, ExecutionStatus
+from backend.agents_v2.registry import get_agent_registry
 
 
 class AgentMonitor:

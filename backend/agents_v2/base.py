@@ -16,13 +16,13 @@ import traceback
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from agents_v2.state import (
+from backend.agents_v2.state import (
     AgentNodeResult,
     AgentState,
     ExecutionStatus,
     create_initial_state,
 )
-from agents_v2.tools import AgentTools
+from backend.agents_v2.tools import AgentTools
 
 
 class BaseAgent(ABC):

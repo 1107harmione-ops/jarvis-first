@@ -10,8 +10,8 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from agents_v2.registry import get_agent_registry
-from agents_v2.graph import create_agent_graph
+from backend.agents_v2.registry import get_agent_registry
+from backend.agents_v2.graph import create_agent_graph
 
 logger = logging.getLogger("jarvis.agents.init")
 

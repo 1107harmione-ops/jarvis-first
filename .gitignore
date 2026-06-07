@@ -38,3 +38,55 @@ android/jarvis-android/local.properties
 
 # Logs
 *.log
+
+# System / shell
+.bash_history
+.bashrc
+.zshrc
+.profile
+.npmrc
+
+# Runtime data
+.cache/
+.local/
+.gradle/
+.cargo/
+
+# Agent config (personal)
+.claude/
+.codex/
+.codebuddy/
+.continue/
+.gemini/
+.kimi-code/
+.opencode/
+.windsurf/
+.roo/
+.trae/
+.agent/
+.agents/
+.android/
+.9router/
+.hawtjni/
+.java/
+.kaggle/
+.paperclip/
+.qoder/
+.hermes/
+.expo/
+.github/
+.config/
+.jarvis_data/
+.jarvis_images/
+.understand-anything/
+.understand-anything-plugin
+.render/
+
+# Session data
+.kimi-code/sessions/
+.kimi-code/logs/
+.kimi-code/telemetry/
+
+# Packages
+node_modules/
+.pnpm-store/

@@ -18,13 +18,14 @@ import time
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
 
-from agents_v2.state import AgentState, create_initial_state
-from agents_v2.graph import create_agent_graph
-from agents_v2.registry import get_agent_registry
-from agents_v2.monitor import get_agent_monitor
-from api.auth import get_current_user
-from database.models import UserResponse
+from backend.agents_v2.state import AgentState, create_initial_state
+from backend.agents_v2.graph import create_agent_graph
+from backend.agents_v2.registry import get_agent_registry
+from backend.agents_v2.monitor import get_agent_monitor
+from backend.api.auth import get_current_user
+from backend.database.models import UserResponse
 
 router = APIRouter(prefix="/api/v2/agents", tags=["agents-v2"])
 

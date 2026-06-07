@@ -21,10 +21,10 @@ from __future__ import annotations
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
-from agents_v2.state import AgentState
-from agents_v2.base import BaseAgent
-from llm.router import llm_router, TaskCategory
-from llm.deepseek import deepseek
+from backend.agents_v2.state import AgentState
+from backend.agents_v2.base import BaseAgent
+from backend.llm.router import llm_router, TaskCategory
+from backend.llm.deepseek import deepseek
 
 
 class RouterAgent(BaseAgent):

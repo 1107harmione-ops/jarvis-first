@@ -19,15 +19,15 @@ import time
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from agents_v2.state import (
+from backend.agents_v2.state import (
     AgentPlan,
     AgentPlanStep,
     AgentState,
     ExecutionStatus,
     WorkflowType,
 )
-from agents_v2.base import BaseAgent
-from llm.deepseek import deepseek
+from backend.agents_v2.base import BaseAgent
+from backend.llm.deepseek import deepseek
 
 
 class PlannerAgent(BaseAgent):

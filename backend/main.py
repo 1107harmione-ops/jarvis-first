@@ -242,8 +242,12 @@ app.include_router(agents.router)
 app.include_router(admin.router)
 
 # Register v2 agent API (LangGraph-powered multi-agent system)
-from api.agents_v2 import router as agents_v2_router
+from backend.api.agents_v2 import router as agents_v2_router
 app.include_router(agents_v2_router)
+
+# Register research API
+from backend.api.research import router as research_router
+app.include_router(research_router)
 
 # Auth routes are in api/auth.py (included via chat router's dependency)
 
