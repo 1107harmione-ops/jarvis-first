@@ -47,11 +47,12 @@ Production-grade AI assistant system with MongoDB memory architecture and real-t
 ## Directory Structure
 
 ```
-├── render.yaml                # Render Blueprint deployment config
+├── Dockerfile                 # Render deployment Docker image (build context = repo root)
+├── render.yaml                # Render Blueprint deployment config (auto-detects Dockerfile)
 ├── backend/                   # ★ Main FastAPI backend
 │   ├── main.py                # Entry point — uvicorn backend.main:app
-│   ├── Dockerfile             # Multi-stage production Docker image
-│   ├── start.sh               # Render/Docker entrypoint with dynamic port
+│   ├── Dockerfile             # Local dev Docker image (build context = backend/)
+│   ├── start.sh               # Docker entrypoint with dynamic $PORT handling
 │   ├── requirements.txt       # Python dependencies
 │   ├── .env.example           # Environment variable template
 │   ├── config/
@@ -94,11 +95,11 @@ Production-grade AI assistant system with MongoDB memory architecture and real-t
    mongodb+srv://<user>:<password>@cluster0.xxxxx.mongodb.net/jarvis?retryWrites=true&w=majority
    ```
 
-### Step 2: Deploy via Render Blueprint (One-Click)
+### Step 2: Deploy via Render Blueprint
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/1107harmione-ops/jarvis-first)
 
-**Or follow these manual steps:**
+**Or follow these steps:**
 
 1. Push this repository to GitHub:
    ```bash
@@ -108,7 +109,7 @@ Production-grade AI assistant system with MongoDB memory architecture and real-t
 
 2. Go to [Render Dashboard](https://dashboard.render.com) → **New** → **Blueprint**
 
-3. Connect your GitHub repo — Render auto-detects `render.yaml`
+3. Connect your GitHub repo — Render auto-detects `render.yaml` and the root `Dockerfile`
 
 4. **Set sensitive environment variables** in the Render Dashboard after deployment:
 
@@ -143,13 +144,19 @@ curl https://<your-app>.onrender.com/docs
 
 ### Step 4: Connect Android App
 
-Update your Android app's WebSocket URL in `android/jarvis-android/app/src/main/java/com/jarvis/voice/model/VoiceConfig.kt`:
+The Android app is already configured to connect to `wss://<your-app>.onrender.com/ws/voice` in `VoiceConfig.kt`. If your Render URL differs, update it there and rebuild the APK:
 
 ```kotlin
+// android/jarvis-android/app/src/main/java/com/jarvis/voice/model/VoiceConfig.kt
 val serverUrl: String = "wss://<your-app>.onrender.com/ws/voice"
 ```
 
-Then rebuild the APK.
+Then rebuild:
+```bash
+cd android/jarvis-android
+./gradlew assembleDebug
+# APK: app/build/outputs/apk/debug/app-debug.apk
+```
 
 ---
 
@@ -212,12 +219,23 @@ uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 python -m pytest tests/ -v
 ```
 
-### With Docker
+### With Docker (Local Dev)
+
+Builds from `backend/Dockerfile` (context = `backend/`):
 
 ```bash
 cd backend
 docker build -t jarvis-backend .
 docker run -p 8000:8000 --env-file .env jarvis-backend
+```
+
+### With Docker (Render-matching build)
+
+Builds from root `Dockerfile` (context = repo root) — same as Render:
+
+```bash
+docker build -t jarvis-backend -f Dockerfile .
+docker run -p 8000:8000 --env-file backend/.env jarvis-backend
 ```
 
 ### With Docker Compose (Full Stack)
