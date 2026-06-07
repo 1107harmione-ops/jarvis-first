@@ -35,7 +35,7 @@ from backend.llm.mimo import mimo
 from backend.llm.router import llm_router
 from backend.services.search_service import search_service
 from backend.database.mongodb import mongodb
-from config.settings import settings
+from backend.config.settings import settings
 
 
 VISION_KEYWORDS: Dict[str, List[str]] = {

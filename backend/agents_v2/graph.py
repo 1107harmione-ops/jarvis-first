@@ -180,7 +180,7 @@ async def memory_log_node(state: AgentState) -> AgentState:
     LangGraph node: Log the conversation exchange to short-term memory.
     Runs as the final step to ensure every interaction is remembered.
     """
-    from memory.short_term import stm
+    from backend.memory.short_term import stm
 
     user_message = state.get("message", "")
     final_response = state.get("final_response", "")

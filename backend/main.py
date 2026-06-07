@@ -59,7 +59,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await mongodb.ensure_indexes()
 
     # Initialize the multi-agent system
-    from agents_v2.init import initialize_agent_system
+    from backend.agents_v2.init import initialize_agent_system
     await initialize_agent_system()
 
     # Initialize voice services
@@ -86,7 +86,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await whisper_service.close()
 
     # Shutdown agent system
-    from agents_v2.init import shutdown_agent_system
+    from backend.agents_v2.init import shutdown_agent_system
     await shutdown_agent_system()
 
     # Close connections

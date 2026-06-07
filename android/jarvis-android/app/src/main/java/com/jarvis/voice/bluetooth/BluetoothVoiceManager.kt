@@ -99,16 +99,9 @@ class BluetoothVoiceManager(private val context: Context) {
     fun isHeadsetConnected(): Boolean {
         return try {
             val adapter = BluetoothAdapter.getDefaultAdapter() ?: return false
-            val headset = adapter.getProfileProxy(
-                context,
-                null,
-                BluetoothProfile.HEADSET,
-            )
-            if (headset is BluetoothHeadset) {
-                val devices = headset.connectedDevices
-                return devices.isNotEmpty()
-            }
-            false
+            // Check if SCO audio is already on as a proxy for headset connection
+            val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            audioManager.isBluetoothScoOn
         } catch (e: SecurityException) {
             Log.e(TAG, "BLUETOOTH_CONNECT permission not granted", e)
             false

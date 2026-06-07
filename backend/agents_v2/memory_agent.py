@@ -23,12 +23,12 @@ from backend.agents_v2.registry import get_agent_registry
 from backend.agents_v2.tools import AgentTools
 from backend.llm.deepseek import deepseek
 from backend.database.mongodb import mongodb
-from memory.short_term import stm
-from memory.long_term import ltm
-from memory.vector_memory import vector_memory
+from backend.memory.short_term import stm
+from backend.memory.long_term import ltm
+from backend.memory.vector_memory import vector_memory
 from backend.services.memory_service import memory_service
 from backend.services.task_service import task_service
-from config.settings import settings
+from backend.config.settings import settings
 
 
 class MemoryAgent(BaseAgent):

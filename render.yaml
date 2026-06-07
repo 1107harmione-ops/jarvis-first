@@ -1,0 +1,118 @@
+# JARVIS Backend — Render Blueprint Configuration
+# ────────────────────────────────────────────────────────────
+# Deploy the FastAPI backend as a Docker web service.
+#
+# Required external services:
+#   - MongoDB Atlas (free M0 cluster): https://www.mongodb.com/atlas
+#
+# After deploying:
+#   1. Set sensitive env vars in Render Dashboard (marked sync: false)
+#   2. Connect your Android app to https://<app>.onrender.com
+#
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  # ── Main Web Service ──────────────────────────────────────
+  - type: web
+    name: jarvis-backend
+    runtime: docker
+    region: singapore  # Nearest to India — change as needed
+    sourceDir: backend
+    dockerfilePath: Dockerfile
+    healthCheckPath: /api/admin/health
+    autoDeploy: true
+
+    envVars:
+      # ── Core ──
+      - key: ENVIRONMENT
+        value: production
+      - key: APP_NAME
+        value: JARVIS
+      - key: APP_VERSION
+        value: 1.0.0
+      - key: DEBUG
+        value: "false"
+
+      # ── Server ──
+      # Render injects $PORT automatically — override the hardcoded 8000
+      - key: PORT
+        value: 8000  # Overridden by Render's $PORT at runtime
+      - key: WORKERS
+        value: 2       # Render free tier: 2 workers
+      - key: CORS_ORIGINS
+        value: "*"
+
+      # ── MongoDB Atlas (REQUIRED) ──────────────────────────
+      # Create a free cluster at https://cloud.mongodb.com
+      # then set this to: mongodb+srv://user:pass@cluster.xxxxx.mongodb.net/jarvis
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGODB_DATABASE
+        value: jarvis
+
+      # ── JWT Authentication ────────────────────────────────
+      - key: JWT_SECRET_KEY
+        sync: false
+      - key: JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "30"
+      - key: JWT_REFRESH_TOKEN_EXPIRE_DAYS
+        value: "7"
+
+      # ── Secrets ───────────────────────────────────────────
+      - key: SECRET_KEY
+        sync: false
+
+      # ── LLM Providers (at least one required) ─────────────
+      # DeepSeek (recommended — primary router/assistant)
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      - key: DEEPSEEK_MODEL
+        value: deepseek-chat
+
+      # OpenAI / Codex (coding agent)
+      - key: CODEX_API_KEY
+        sync: false
+      - key: CODEX_MODEL
+        value: gpt-4o
+
+      # Minimax (research agent)
+      - key: MINIMAX_API_KEY
+        sync: false
+      - key: MINIMAX_MODEL
+        value: minimax-m2.1
+
+      # Mimo (vision agent)
+      - key: MIMO_API_KEY
+        sync: false
+      - key: MIMO_MODEL
+        value: mimo-v2-omni
+
+      # ── Voice (Optional) ──────────────────────────────────
+      - key: PIPER_ENABLED
+        value: "false"      # Piper requires binary — disable on Render
+      - key: VOICE_SESSION_TIMEOUT_SECONDS
+        value: "300"
+      - key: VOICE_WEBSOCKET_TIMEOUT
+        value: "600"
+
+      # ── Memory ────────────────────────────────────────────
+      - key: MEMORY_VECTOR_DIMENSION
+        value: "384"
+      - key: MEMORY_MAX_CONTEXT_TOKENS
+        value: "4096"
+      - key: MEMORY_STM_TTL_HOURS
+        value: "24"
+      - key: MEMORY_LTM_IMPORTANCE_THRESHOLD
+        value: "0.6"
+
+      # ── Tasks ─────────────────────────────────────────────
+      - key: TASK_MAX_RETRIES
+        value: "3"
+
+      # ── Logging ───────────────────────────────────────────
+      - key: LOG_LEVEL
+        value: INFO
+
+      # ── Rate Limiting ─────────────────────────────────────
+      - key: RATE_LIMIT_PER_MINUTE
+        value: "60"
