@@ -8,7 +8,9 @@ data class VoiceConfig(
     val serverUrl: String = "ws://localhost:8002/ws/voice",
     val sampleRate: Int = 16000,
     val language: String = "en",
+    val uiLanguage: String = "en",
     val voiceSpeed: Float = 1.0f,
+    val voicePitch: Float = 1.0f,
     val wakeWordEnabled: Boolean = true,
     val wakeWordSensitivity: Float = 0.5f,
     val wakeWord: String = "hey jarvis",
@@ -19,4 +21,7 @@ data class VoiceConfig(
     val bluetoothScoEnabled: Boolean = true,
     val silenceTimeoutMs: Long = 1500L,
     val maxCommandDurationMs: Long = 30_000L,
+    val offlineModeEnabled: Boolean = false,
+    val batteryAwareEnabled: Boolean = true,
+    val lowPowerListeningEnabled: Boolean = true,
 )

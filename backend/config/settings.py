@@ -122,6 +122,40 @@ class Settings(BaseSettings):
     VOICE_SESSION_TIMEOUT_SECONDS: int = Field(
         default=300, ge=30, description="Voice session idle timeout"
     )
+    VOICE_STREAMING_ENABLED: bool = Field(
+        default=True, description="Enable streaming voice processing"
+    )
+    VOICE_WEBSOCKET_TIMEOUT: int = Field(
+        default=600, ge=60, description="Voice WebSocket idle timeout in seconds"
+    )
+
+    # ── Piper TTS (local neural TTS) ──────────────────────────
+    PIPER_ENABLED: bool = Field(
+        default=True, description="Enable local Piper TTS"
+    )
+    PIPER_MODEL_PATH: str = Field(
+        default="./models/piper/", description="Path to Piper voice models directory"
+    )
+    PIPER_VOICE_EN: str = Field(
+        default="en_US-lessac-medium", description="Default English Piper voice"
+    )
+    PIPER_VOICE_HI: str = Field(
+        default="hi_IN-medium", description="Default Hindi Piper voice"
+    )
+    PIPER_EXECUTABLE_PATH: str = Field(
+        default="", description="Path to Piper binary (auto-detect if empty)"
+    )
+
+    # ── Whisper STT ───────────────────────────────────────────
+    WHISPER_API_KEY: str = Field(
+        default="", description="OpenAI API key for Whisper STT"
+    )
+    WHISPER_MODEL: str = Field(
+        default="whisper-1", description="Whisper model name"
+    )
+    WHISPER_API_BASE_URL: str = Field(
+        default="", description="OpenAI API base URL (default: api.openai.com)"
+    )
 
     # ── Task System ───────────────────────────────────────────
     TASK_MAX_RETRIES: int = Field(default=3, ge=0, le=10)

@@ -134,27 +134,171 @@ async def synthesize_speech(
 @router.get("/history")
 async def get_voice_history(
     limit: int = 20,
+    offset: int = 0,
+    language: str | None = None,
     user: dict[str, Any] = Depends(get_current_user),
 ) -> dict[str, Any]:
-    """Get voice interaction history."""
-    from backend.database.mongodb import mongodb
-    from backend.database.schemas import serialize_doc
+    """Get voice interaction history with pagination."""
+    from backend.memory.voice_memory import voice_memory_service
 
-    cursor = mongodb.agent_logs.find(
-        {"user_id": user["id"], "agent_name": "voice_service", "action": "voice_interaction"},
-        sort=[("created_at", -1)],
+    items = await voice_memory_service.get_history(
+        user_id=user["id"],
+        limit=limit,
+        offset=offset,
+        language=language,
+    )
+    total = await voice_memory_service.get_history_count(
+        user_id=user["id"],
+        language=language,
+    )
+    return {
+        "success": True,
+        "data": {"items": items, "total": total},
+    }
+
+
+@router.get("/config")
+async def get_voice_config(
+    user: dict[str, Any] = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Get user's voice preferences."""
+    from backend.memory.voice_memory import voice_memory_service
+
+    prefs = await voice_memory_service.get_preferences(user["id"])
+    return {"success": True, "data": prefs}
+
+
+@router.put("/config")
+async def update_voice_config(
+    config: dict[str, Any],
+    user: dict[str, Any] = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Update user's voice preferences."""
+    from backend.memory.voice_memory import voice_memory_service
+
+    await voice_memory_service.store_preferences(user["id"], config)
+    return {"success": True, "message": "Preferences updated"}
+
+
+@router.get("/metrics")
+async def get_voice_metrics(
+    user: dict[str, Any] = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Get aggregate voice usage statistics."""
+    from backend.memory.voice_memory import voice_memory_service
+    from backend.services.offline_handler import offline_handler
+
+    stats = await voice_memory_service.get_voice_stats(user["id"])
+    stats["offline_status"] = offline_handler.status_summary
+    stats["is_online"] = offline_handler.is_fully_online
+    return {"success": True, "data": stats}
+
+
+@router.get("/commands/frequent")
+async def get_frequent_commands(
+    limit: int = 20,
+    user: dict[str, Any] = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Get user's most frequently used voice commands."""
+    from backend.memory.voice_memory import voice_memory_service
+
+    commands = await voice_memory_service.get_frequent_commands(
+        user_id=user["id"],
         limit=limit,
     )
-    logs = await cursor.to_list(length=limit)
-    history = []
-    for log in logs:
-        s = serialize_doc(log)
-        history.append({
-            "id": s.get("id"),
-            "transcript": s.get("input_summary", ""),
-            "response": s.get("output_summary", ""),
-            "language": s.get("metadata", {}).get("language", "en"),
-            "duration_ms": s.get("duration_ms", 0),
-            "created_at": s.get("created_at", ""),
-        })
-    return {"success": True, "data": {"items": history, "total": len(history)}}
+    return {"success": True, "data": commands}
+
+
+@router.post("/offline/queue")
+async def queue_offline_command(
+    transcript: str,
+    language: str = "en",
+    user: dict[str, Any] = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Queue a voice command for processing when back online."""
+    from backend.services.offline_handler import offline_handler
+
+    queue_id = await offline_handler.queue_command(
+        user_id=user["id"],
+        transcript=transcript,
+        language=language,
+    )
+    # Provide immediate offline response
+    response = await offline_handler.get_offline_response(transcript, language)
+    return {
+        "success": True,
+        "data": {
+            "queue_id": queue_id,
+            "response": response,
+            "queued": True,
+        },
+    }
+
+
+@router.get("/offline/queue")
+async def get_offline_queue(
+    user: dict[str, Any] = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Get queued offline commands."""
+    from backend.services.offline_handler import offline_handler
+
+    commands = await offline_handler.get_queued_commands(user["id"])
+    return {"success": True, "data": commands}
+
+
+@router.post("/offline/process")
+async def process_offline_queue(
+    user: dict[str, Any] = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Process queued offline commands (triggered when back online)."""
+    from backend.services.offline_handler import offline_handler
+
+    processed = await offline_handler.process_queued_commands(user["id"])
+    return {
+        "success": True,
+        "data": {"processed": processed},
+    }
+
+
+@router.get("/voices")
+async def get_available_voices(
+    user: dict[str, Any] = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Get available Piper TTS voices."""
+    from backend.services.piper_tts import piper_service
+
+    voices = await piper_service.get_available_voices()
+    return {"success": True, "data": voices}
+
+
+@router.post("/synthesize/stream")
+async def synthesize_speech_stream(
+    text: str = Form(..., min_length=1, max_length=2000),
+    language: str = Form("en"),
+    voice: str | None = Form(None),
+    speed: float = Form(1.0),
+    user: dict[str, Any] = Depends(get_current_user),
+) -> Any:
+    """Synthesize text to speech with streaming audio response."""
+    from backend.services.piper_tts import piper_service
+    from fastapi.responses import StreamingResponse
+
+    async def audio_stream():
+        async for chunk in piper_service.stream_synthesize(
+            text=text,
+            language=language,
+            voice=voice,
+            speed=speed,
+        ):
+            yield chunk
+
+    return StreamingResponse(
+        audio_stream(),
+        media_type="audio/L16;rate=22050;channels=1",
+        headers={
+            "Content-Disposition": "inline; filename=speech.raw",
+            "X-Audio-Sample-Rate": "22050",
+            "X-Audio-Channels": "1",
+            "X-Audio-Format": "pcm16",
+        },
+    )

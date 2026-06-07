@@ -118,6 +118,26 @@ class MongoDBManager:
     def knowledge(self) -> AsyncIOMotorCollection:
         return self.get_collection("knowledge")
 
+    @property
+    def voice_history(self) -> AsyncIOMotorCollection:
+        return self.get_collection("voice_history")
+
+    @property
+    def voice_commands(self) -> AsyncIOMotorCollection:
+        return self.get_collection("voice_commands")
+
+    @property
+    def voice_preferences(self) -> AsyncIOMotorCollection:
+        return self.get_collection("voice_preferences")
+
+    @property
+    def voice_sessions(self) -> AsyncIOMotorCollection:
+        return self.get_collection("voice_sessions")
+
+    @property
+    def offline_queue(self) -> AsyncIOMotorCollection:
+        return self.get_collection("offline_queue")
+
     # ── Index Management ───────────────────────────────────────
 
     async def ensure_indexes(self) -> None:
@@ -166,6 +186,32 @@ class MongoDBManager:
                 ("source", 1),
                 ("created_at", -1),
                 [("tags", 1)],
+            ],
+            "voice_history": [
+                ("user_id", 1),
+                ("created_at", -1),
+                [("user_id", 1), ("created_at", -1)],
+                [("user_id", 1), ("language", 1)],
+            ],
+            "voice_commands": [
+                ("user_id", 1),
+                ("command", 1),
+                ("count", -1),
+                [("user_id", 1), ("command", 1)],
+            ],
+            "voice_preferences": [
+                [("user_id", 1)],
+            ],
+            "voice_sessions": [
+                ("user_id", 1),
+                ("created_at", -1),
+                [("user_id", 1), ("created_at", -1)],
+            ],
+            "offline_queue": [
+                ("user_id", 1),
+                ("status", 1),
+                ("created_at", 1),
+                [("user_id", 1), ("status", 1)],
             ],
         }
 

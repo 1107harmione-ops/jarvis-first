@@ -20,10 +20,14 @@ passlib>=1.7.4,<2.0.0
 
 # ── AI / LLM (HTTP clients) ───────────────────────────────────
 httpx>=0.27.0,<1.0.0
+openai>=1.30.0,<2.0.0  # Whisper STT API client
 
 # ── Vector Memory ─────────────────────────────────────────────
 numpy>=1.26.0,<2.0.0
 # sentence-transformers>=3.0.0,<4.0.0  # Uncomment for local embeddings
+
+# ── Audio Processing ──────────────────────────────────────────
+soundfile>=0.12.0,<1.0.0
 
 # ── Search ────────────────────────────────────────────────────
 # duckduckgo_search>=6.0.0,<7.0.0  # Optional: better DDG support

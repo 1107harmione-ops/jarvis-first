@@ -15,6 +15,10 @@ data class VoiceMetrics(
     val reconnections: Int = 0,
     val uptimeMs: Long = 0L,
     val bluetoothScoDurationMs: Long = 0L,
+    val offlineCommandsQueued: Int = 0,
+    val offlineCommandsProcessed: Int = 0,
+    val batterySaverActivations: Int = 0,
+    val lowPowerListeningSessions: Int = 0,
 ) {
     /** Reset all counters to zero. */
     fun reset(): VoiceMetrics = VoiceMetrics()

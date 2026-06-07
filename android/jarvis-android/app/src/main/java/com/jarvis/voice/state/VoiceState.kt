@@ -50,6 +50,21 @@ object VoiceStateHolder {
     private val _transcript = MutableStateFlow("")
     val transcript: StateFlow<String> = _transcript.asStateFlow()
 
+    private val _serverLanguage = MutableStateFlow("en")
+    val serverLanguage: StateFlow<String> = _serverLanguage.asStateFlow()
+
+    private val _uiLanguage = MutableStateFlow("en")
+    val uiLanguage: StateFlow<String> = _uiLanguage.asStateFlow()
+
+    private val _isOffline = MutableStateFlow(false)
+    val isOffline: StateFlow<Boolean> = _isOffline.asStateFlow()
+
+    private val _queuedCommandCount = MutableStateFlow(0)
+    val queuedCommandCount: StateFlow<Int> = _queuedCommandCount.asStateFlow()
+
+    private val _isBatterySaverActive = MutableStateFlow(false)
+    val isBatterySaverActive: StateFlow<Boolean> = _isBatterySaverActive.asStateFlow()
+
     private val _isBluetoothScoConnected = MutableStateFlow(false)
     val isBluetoothScoConnected: StateFlow<Boolean> = _isBluetoothScoConnected.asStateFlow()
 
@@ -70,6 +85,26 @@ object VoiceStateHolder {
 
     fun updateTranscript(text: String) {
         _transcript.value = text
+    }
+
+    fun updateServerLanguage(lang: String) {
+        _serverLanguage.value = lang
+    }
+
+    fun updateUiLanguage(lang: String) {
+        _uiLanguage.value = lang
+    }
+
+    fun updateOfflineState(isOffline: Boolean) {
+        _isOffline.value = isOffline
+    }
+
+    fun updateQueuedCommandCount(count: Int) {
+        _queuedCommandCount.value = count
+    }
+
+    fun updateBatterySaverState(active: Boolean) {
+        _isBatterySaverActive.value = active
     }
 
     // --- Audio focus events ---

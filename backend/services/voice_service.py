@@ -1,6 +1,7 @@
 """
 Voice Service — manages voice sessions, STT, TTS, and voice-based interactions.
-Integrates with the WebSocket voice endpoint and external speech APIs.
+Integrates with the WebSocket voice endpoint, Piper TTS, Whisper STT,
+and external speech APIs.
 """
 
 from __future__ import annotations
@@ -12,7 +13,7 @@ import time
 import uuid
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any
+from typing import Any, AsyncGenerator
 
 import httpx
 
@@ -32,6 +33,7 @@ class VoiceSessionState(str, Enum):
     THINKING = "thinking"
     SPEAKING = "speaking"
     INTERRUPTED = "interrupted"
+    OFFLINE = "offline"
     ERROR = "error"
 
 
@@ -52,6 +54,10 @@ class VoiceSession:
         self.transcript: str = ""
         self.response_text: str = ""
         self.interrupted = False
+        self.wake_word_enabled: bool = True
+        self.offline_mode: bool = False
+        self.voice_speed: float = 1.0
+        self.voice_pitch: float = 1.0
         self.metrics: dict[str, Any] = {}
 
     @property
@@ -68,6 +74,8 @@ class VoiceSession:
             "expires_at": self.expires_at.isoformat(),
             "transcript": self.transcript,
             "interrupted": self.interrupted,
+            "wake_word_enabled": self.wake_word_enabled,
+            "offline_mode": self.offline_mode,
         }
 
 
@@ -125,7 +133,22 @@ class VoiceService:
     async def transcribe(
         self, audio_data: bytes, language: str = "en", mime_type: str = "audio/webm"
     ) -> str:
-        """Transcribe audio to text using OpenAI Whisper API."""
+        """Transcribe audio to text using Whisper (with Piper/DeepSeek fallback)."""
+        from backend.services.whisper_stt import whisper_service
+
+        # Try new Whisper STT service first
+        if whisper_service.available:
+            try:
+                result = await whisper_service.transcribe(
+                    audio_data=audio_data,
+                    language=language if language != "auto" else None,
+                )
+                if result.text:
+                    return result.text
+            except Exception as e:
+                logger.warning("New Whisper STT failed, falling back: %s", e)
+
+        # Fallback: DeepSeek Whisper API
         client = await self._client()
         try:
             response = await client.post(
@@ -150,7 +173,20 @@ class VoiceService:
     async def synthesize(
         self, text: str, voice: str | None = None, speed: float = 1.0
     ) -> bytes:
-        """Synthesize text to speech audio bytes."""
+        """Synthesize text to speech audio bytes (Piper preferred, API fallback)."""
+        from backend.services.piper_tts import piper_service
+
+        # Try new Piper TTS first
+        if piper_service.available:
+            try:
+                return await piper_service.synthesize(
+                    text=text,
+                    speed=speed,
+                )
+            except Exception as e:
+                logger.warning("Piper TTS failed, falling back to API: %s", e)
+
+        # Fallback: DeepSeek TTS API
         client = await self._client()
         try:
             response = await client.post(
@@ -187,7 +223,7 @@ class VoiceService:
             language: Override language detection.
 
         Returns:
-            Dict with transcript, response text, audio URL (optional).
+            Dict with transcript, response text, audio bytes, metrics.
         """
         session = self.get_session(session_id)
         if not session:
@@ -213,6 +249,27 @@ class VoiceService:
                 "interrupted": False,
             }
 
+        # Check offline mode
+        from backend.services.offline_handler import offline_handler
+
+        if session.offline_mode or not offline_handler.is_fully_online:
+            session.state = VoiceSessionState.IDLE
+            offline_response = await offline_handler.get_offline_response(transcript, lang)
+            await offline_handler.queue_command(
+                user_id=session.user_id,
+                transcript=transcript,
+                language=lang,
+            )
+            return {
+                "session_id": session_id,
+                "transcript": transcript,
+                "response": offline_response,
+                "audio_data": b"",
+                "duration_ms": round((time.monotonic() - start) * 1000, 1),
+                "interrupted": False,
+                "offline": True,
+            }
+
         # Process through agent pipeline (import here to avoid circular)
         from backend.agents.router_agent import router_agent
 
@@ -228,7 +285,10 @@ class VoiceService:
 
         # TTS
         session.state = VoiceSessionState.SPEAKING
-        audio_bytes = await self.synthesize(response_text)
+        audio_bytes = await self.synthesize(
+            response_text,
+            speed=session.voice_speed,
+        )
         tts_time = (time.monotonic() - start) * 1000
 
         session.state = VoiceSessionState.IDLE
@@ -243,6 +303,24 @@ class VoiceService:
 
         # Store voice interaction history
         await self._store_interaction(session, transcript, response_text, total_time)
+
+        # Store in voice memory
+        try:
+            from backend.memory.voice_memory import voice_memory_service
+
+            await voice_memory_service.store_interaction(
+                user_id=session.user_id,
+                session_id=session_id,
+                transcript=transcript,
+                response=response_text,
+                confidence=0.9,
+                agent=agent_response.get("agent", "router"),
+                language=lang,
+                metrics=session.metrics,
+                interrupted=session.interrupted,
+            )
+        except Exception as e:
+            logger.warning("Failed to store voice memory: %s", e)
 
         return {
             "session_id": session_id,

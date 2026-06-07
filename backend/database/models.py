@@ -62,9 +62,11 @@ class VoiceState(str, Enum):
     IDLE = "idle"
     WAKE_PENDING = "wake_pending"
     LISTENING = "listening"
-    PROCESSING = "processing"
+    PROCESSING_STT = "processing_stt"
+    THINKING = "thinking"
     SPEAKING = "speaking"
     INTERRUPTED = "interrupted"
+    OFFLINE = "offline"
     ERROR = "error"
 
 

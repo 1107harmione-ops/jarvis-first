@@ -1,10 +1,9 @@
 package com.jarvis.voice.client
 
 import android.util.Log
+import com.jarvis.voice.client.VoiceProtocol
 import com.jarvis.voice.state.VoiceState
 import com.jarvis.voice.state.VoiceStateHolder
-import com.google.gson.Gson
-import com.google.gson.JsonObject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -39,7 +38,6 @@ class VoiceWebSocketClient(
     private val onPartial: (String) -> Unit,
     private val onError: (String) -> Unit,
 ) {
-    private val gson = Gson()
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private val client: OkHttpClient = OkHttpClient.Builder()
@@ -166,21 +164,40 @@ class VoiceWebSocketClient(
      * Send an interrupt message to stop TTS playback.
      */
     fun sendInterrupt() {
-        sendText(createInterruptMessage())
+        sendText(VoiceProtocol.interrupt())
     }
 
     /**
      * Signal the end of the current audio utterance.
      */
     fun sendAudioEnd() {
-        sendText(createAudioEndMessage())
+        sendText(VoiceProtocol.audioEnd())
     }
 
     /**
      * Send a configuration update to the server.
      */
     fun sendConfig(language: String, voiceSpeed: Float) {
-        sendText(createConfigMessage(language, voiceSpeed))
+        sendText(VoiceProtocol.configUpdate(language = language, voiceSpeed = voiceSpeed))
+    }
+
+    /**
+     * Send a full configuration update with all optional parameters.
+     */
+    fun sendConfig(
+        language: String? = null,
+        voiceSpeed: Float? = null,
+        voicePitch: Float? = null,
+        wakeWordEnabled: Boolean? = null,
+        offlineMode: Boolean? = null,
+    ) {
+        sendText(VoiceProtocol.configUpdate(
+            language = language,
+            voiceSpeed = voiceSpeed,
+            voicePitch = voicePitch,
+            wakeWordEnabled = wakeWordEnabled,
+            offlineMode = offlineMode,
+        ))
     }
 
     // ---- Internal helpers ----
@@ -194,14 +211,15 @@ class VoiceWebSocketClient(
     }
 
     private fun handleTextMessage(text: String) {
-        val msg = parseServerMessage(text) ?: run {
+        val msgType = VoiceProtocol.parseMessageType(text) ?: run {
             Log.w(TAG, "Unparseable server message: $text")
             return
         }
 
-        when (msg.type) {
-            VoiceMessageType.STATE_CHANGE -> {
-                val state = VoiceState.fromString(msg.state)
+        when (msgType) {
+            VoiceProtocol.TYPE_STATE -> {
+                val rawState = VoiceProtocol.parseState(text) ?: return
+                val state = VoiceState.fromString(rawState)
                 onStateChange(state)
                 when (state) {
                     VoiceState.SPEAKING -> onTtsStart()
@@ -210,31 +228,60 @@ class VoiceWebSocketClient(
                 }
             }
 
-            VoiceMessageType.PARTIAL -> {
-                msg.text?.let { text ->
-                    VoiceStateHolder.updatePartialText(text)
-                    onPartial(text)
+            VoiceProtocol.TYPE_PARTIAL -> {
+                val info = VoiceProtocol.parsePartial(text)
+                if (info != null) {
+                    VoiceStateHolder.updatePartialText(info.text)
+                    onPartial(info.text)
                 }
             }
 
-            VoiceMessageType.TRANSCRIPT -> {
-                msg.text?.let { text ->
-                    VoiceStateHolder.updateTranscript(text)
-                    onTranscript(text)
+            VoiceProtocol.TYPE_TRANSCRIPT -> {
+                val info = VoiceProtocol.parseTranscript(text)
+                if (info != null) {
+                    VoiceStateHolder.updateTranscript(info.text)
+                    onTranscript(info.text)
                 }
             }
 
-            VoiceMessageType.TTS_START -> onTtsStart()
-            VoiceMessageType.TTS_END -> onTtsEnd()
+            VoiceProtocol.TYPE_THINKING -> {
+                val agent = VoiceProtocol.parseThinking(text)
+                Log.d(TAG, "Agent thinking: $agent")
+            }
 
-            VoiceMessageType.ERROR -> {
-                val errorMsg = msg.message ?: msg.text ?: "Unknown error"
+            VoiceProtocol.TYPE_TTS_START -> onTtsStart()
+            VoiceProtocol.TYPE_TTS_END -> onTtsEnd()
+
+            VoiceProtocol.TYPE_ERROR -> {
+                val errorMsg = VoiceProtocol.parseError(text) ?: "Unknown error"
                 Log.e(TAG, "Server error: $errorMsg")
                 onError(errorMsg)
             }
 
+            VoiceProtocol.TYPE_RESULT -> {
+                val result = VoiceProtocol.parseResult(text)
+                if (result != null) {
+                    Log.d(TAG, "Pipeline result: agent=${result.agent}")
+                }
+            }
+
+            VoiceProtocol.TYPE_CONNECTED -> {
+                val info = VoiceProtocol.parseConnected(text)
+                if (info != null) {
+                    Log.i(TAG, "Connected: session=${info.sessionId} state=${info.state}")
+                }
+            }
+
+            VoiceProtocol.TYPE_CONFIG_ACK -> {
+                Log.d(TAG, "Config acknowledged by server")
+            }
+
+            VoiceProtocol.TYPE_PONG -> {
+                // Server replied to ping — connection is healthy
+            }
+
             else -> {
-                Log.d(TAG, "Unhandled message type: ${msg.type}")
+                Log.d(TAG, "Unhandled message type: $msgType")
             }
         }
     }

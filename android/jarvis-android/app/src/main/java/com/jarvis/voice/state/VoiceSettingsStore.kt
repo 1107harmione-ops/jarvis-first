@@ -45,11 +45,28 @@ class VoiceSettingsStore(context: Context) {
     fun isBluetoothScoEnabled(): Boolean =
         prefs.getBoolean(KEY_BLUETOOTH_SCO_ENABLED, true)
 
+    fun getUiLanguage(): String =
+        prefs.getString(KEY_UI_LANGUAGE, "en") ?: "en"
+
+    fun getVoicePitch(): Float =
+        prefs.getFloat(KEY_VOICE_PITCH, 1.0f)
+
+    fun isOfflineModeEnabled(): Boolean =
+        prefs.getBoolean(KEY_OFFLINE_MODE, false)
+
+    fun isBatteryAwareEnabled(): Boolean =
+        prefs.getBoolean(KEY_BATTERY_AWARE, true)
+
+    fun isLowPowerListeningEnabled(): Boolean =
+        prefs.getBoolean(KEY_LOW_POWER_LISTENING, true)
+
     /** Load full config from preferences. */
     fun loadConfig(): VoiceConfig = VoiceConfig(
         serverUrl = getServerUrl(),
         language = getLanguage(),
+        uiLanguage = getUiLanguage(),
         voiceSpeed = getVoiceSpeed(),
+        voicePitch = getVoicePitch(),
         wakeWordEnabled = isWakeWordEnabled(),
         wakeWordSensitivity = getWakeWordSensitivity(),
         wakeWord = getWakeWord(),
@@ -57,6 +74,9 @@ class VoiceSettingsStore(context: Context) {
         maxReconnectAttempts = getMaxReconnectAttempts(),
         interruptEnabled = isInterruptEnabled(),
         bluetoothScoEnabled = isBluetoothScoEnabled(),
+        offlineModeEnabled = isOfflineModeEnabled(),
+        batteryAwareEnabled = isBatteryAwareEnabled(),
+        lowPowerListeningEnabled = isLowPowerListeningEnabled(),
     )
 
     // ---- Setters ----
@@ -101,12 +121,34 @@ class VoiceSettingsStore(context: Context) {
         prefs.edit().putBoolean(KEY_BLUETOOTH_SCO_ENABLED, enabled).apply()
     }
 
+    fun setUiLanguage(lang: String) {
+        prefs.edit().putString(KEY_UI_LANGUAGE, lang).apply()
+    }
+
+    fun setVoicePitch(pitch: Float) {
+        prefs.edit().putFloat(KEY_VOICE_PITCH, pitch).apply()
+    }
+
+    fun setOfflineModeEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_OFFLINE_MODE, enabled).apply()
+    }
+
+    fun setBatteryAwareEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_BATTERY_AWARE, enabled).apply()
+    }
+
+    fun setLowPowerListeningEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_LOW_POWER_LISTENING, enabled).apply()
+    }
+
     /** Persist the settings portion of a VoiceConfig. */
     fun saveConfig(config: VoiceConfig) {
         prefs.edit()
             .putString(KEY_SERVER_URL, config.serverUrl)
             .putString(KEY_LANGUAGE, config.language)
+            .putString(KEY_UI_LANGUAGE, config.uiLanguage)
             .putFloat(KEY_VOICE_SPEED, config.voiceSpeed)
+            .putFloat(KEY_VOICE_PITCH, config.voicePitch)
             .putBoolean(KEY_WAKE_WORD_ENABLED, config.wakeWordEnabled)
             .putFloat(KEY_WAKE_WORD_SENSITIVITY, config.wakeWordSensitivity)
             .putString(KEY_WAKE_WORD, config.wakeWord)
@@ -114,6 +156,9 @@ class VoiceSettingsStore(context: Context) {
             .putInt(KEY_MAX_RECONNECT_ATTEMPTS, config.maxReconnectAttempts)
             .putBoolean(KEY_INTERRUPT_ENABLED, config.interruptEnabled)
             .putBoolean(KEY_BLUETOOTH_SCO_ENABLED, config.bluetoothScoEnabled)
+            .putBoolean(KEY_OFFLINE_MODE, config.offlineModeEnabled)
+            .putBoolean(KEY_BATTERY_AWARE, config.batteryAwareEnabled)
+            .putBoolean(KEY_LOW_POWER_LISTENING, config.lowPowerListeningEnabled)
             .apply()
     }
 
@@ -135,5 +180,10 @@ class VoiceSettingsStore(context: Context) {
         private const val KEY_MAX_RECONNECT_ATTEMPTS = "max_reconnect_attempts"
         private const val KEY_INTERRUPT_ENABLED = "interrupt_enabled"
         private const val KEY_BLUETOOTH_SCO_ENABLED = "bluetooth_sco_enabled"
+        private const val KEY_UI_LANGUAGE = "ui_language"
+        private const val KEY_VOICE_PITCH = "voice_pitch"
+        private const val KEY_OFFLINE_MODE = "offline_mode"
+        private const val KEY_BATTERY_AWARE = "battery_aware"
+        private const val KEY_LOW_POWER_LISTENING = "low_power_listening"
     }
 }

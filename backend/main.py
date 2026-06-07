@@ -30,6 +30,9 @@ from backend.config.settings import settings
 from backend.database.mongodb import mongodb
 from backend.services.task_service import task_service
 from backend.services.voice_service import voice_service
+from backend.services.piper_tts import piper_service
+from backend.services.whisper_stt import whisper_service
+from backend.services.offline_handler import offline_handler
 from backend.utils.logger import setup_logging, get_logger
 from backend.utils.security import rate_limiter
 from backend.websocket.chat_socket import chat_websocket
@@ -55,9 +58,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await mongodb.connect()
     await mongodb.ensure_indexes()
 
+    # Initialize voice services
+    await piper_service.initialize()
+    await whisper_service.initialize()
+
     # Start background workers
     task_service.start_worker()
     voice_service.start_cleanup_task()
+    await offline_handler.start_monitoring()
 
     yield
 
@@ -66,10 +74,15 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     # Stop workers
     await task_service.stop_worker()
+    await offline_handler.stop_monitoring()
+
+    # Close voice services
+    await voice_service.close()
+    await piper_service.close()
+    await whisper_service.close()
 
     # Close connections
     await mongodb.disconnect()
-    await voice_service.close()
 
     # Close LLM clients
     from backend.llm.deepseek import deepseek
@@ -160,6 +173,53 @@ async def websocket_chat(websocket: Request) -> None:
     """
     token = websocket.query_params.get("token")
     await chat_websocket.handle(websocket, token)
+
+
+@app.websocket("/ws/voice")
+async def websocket_voice(websocket: Request) -> None:
+    """WebSocket endpoint for real-time voice conversations.
+
+    Streaming audio in (PCM16) → STT → Agent → TTS → Streaming audio out.
+
+    Connect with JWT token as query parameter:
+        ws://host:port/ws/voice?token=<jwt>
+
+    Protocol:
+        Client → Server:
+          - Binary: PCM16 audio chunks (16000Hz MONO)
+          - JSON: {"type":"audio_start|audio_end|interrupt|config|ping"}
+
+        Server → Client:
+          - Binary: PCM16 audio chunks (22050Hz MONO) for TTS
+          - JSON: state/transcript/thinking/tts_start/tts_end/error/pong
+    """
+    from backend.websocket.voice_socket import voice_ws_manager
+    from backend.utils.auth import decode_token
+
+    token = websocket.query_params.get("token", "")
+    user = decode_token(token)
+    if not user:
+        await websocket.close(code=4001, reason="Authentication required")
+        return
+
+    user_id = user.get("sub", user.get("id", ""))
+    if not user_id:
+        from bson import ObjectId
+        user_id = str(user.get("_id", ""))
+        if not user_id:
+            await websocket.close(code=4001, reason="Invalid token")
+            return
+
+    config_str = websocket.query_params.get("config")
+    initial_config = None
+    if config_str:
+        try:
+            import json
+            initial_config = json.loads(config_str)
+        except (json.JSONDecodeError, Exception):
+            pass
+
+    await voice_ws_manager.handle_connection(websocket, user_id, initial_config)
 
 
 # ── API Routes ───────────────────────────────────────────────────
