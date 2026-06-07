@@ -18,7 +18,7 @@ services:
     runtime: docker
     region: singapore  # Nearest to India — change as needed
     sourceDir: backend
-    dockerfilePath: Dockerfile
+    dockerfilePath: backend/Dockerfile
     healthCheckPath: /api/admin/health
     autoDeploy: true
 
