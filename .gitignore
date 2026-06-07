@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.venv/
+venv/
+env/
+
+# Model files (download separately)
+models/
+voices/
+*.onnx
+*.bin
+*.gguf
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Android
+android/jarvis-android/.gradle/
+android/jarvis-android/build/
+android/jarvis-android/app/build/
+android/jarvis-android/local.properties
+*.apk
+*.aab
+
+# Logs
+*.log

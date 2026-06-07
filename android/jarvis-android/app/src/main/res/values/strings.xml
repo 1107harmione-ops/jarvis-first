@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">JARVIS Voice</string>
+    <string name="notification_channel_name">JARVIS Voice</string>
+    <string name="notification_channel_description">Voice assistant status notifications</string>
+    <string name="listening_text">Listening…</string>
+    <string name="speaking_text">Speaking…</string>
+    <string name="idle_text">Ready</string>
+    <string name="thinking_text">Thinking…</string>
+    <string name="action_stop">Stop</string>
+    <string name="offline_text">Offline</string>
+    <string name="error_text">Error</string>
+</resources>

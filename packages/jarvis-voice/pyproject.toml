@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jarvis-voice"
+version = "0.1.0"
+description = "Production-grade voice system backend for JARVIS AI assistant"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+keywords = ["voice", "stt", "tts", "wake-word", "fastapi", "websocket"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+]
+dependencies = [
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.25.0",
+    "faster-whisper>=0.10.0",
+    "openwakeword>=0.5.0; platform_machine != 'aarch64'",
+    "numpy>=1.24.0",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    "dataclasses-json>=0.6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.23.0",
+    "httpx>=0.26.0",
+    "websockets>=12.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["jarvis_voice*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

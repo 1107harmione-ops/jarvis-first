@@ -1,0 +1,55 @@
+{
+  "indexes": [
+    {
+      "collectionName": "memories",
+      "indexName": "memory_vector_index",
+      "type": "vectorSearch",
+      "definition": {
+        "fields": [
+          {
+            "type": "vector",
+            "path": "embedding",
+            "numDimensions": 384,
+            "similarity": "cosine",
+            "quantization": "scalar"
+          },
+          {
+            "type": "filter",
+            "path": "memory_type"
+          },
+          {
+            "type": "filter",
+            "path": "user_id"
+          },
+          {
+            "type": "filter",
+            "path": "tags"
+          }
+        ]
+      }
+    },
+    {
+      "collectionName": "knowledge",
+      "indexName": "knowledge_vector_index",
+      "type": "vectorSearch",
+      "definition": {
+        "fields": [
+          {
+            "type": "vector",
+            "path": "embedding",
+            "numDimensions": 384,
+            "similarity": "cosine"
+          },
+          {
+            "type": "filter",
+            "path": "user_id"
+          },
+          {
+            "type": "filter",
+            "path": "source_type"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+version: "3.9"
+
+services:
+  jarvis-voice:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      args:
+        - PIPER_VERSION=2023.11
+    ports:
+      - "8002:8002"
+    environment:
+      - JARVIS_HOST=0.0.0.0
+      - JARVIS_PORT=8002
+      - JARVIS_LOG_LEVEL=INFO
+      - JARVIS_SAMPLE_RATE=16000
+      - JARVIS_FRAME_MS=30
+      - JARVIS_WHISPER_MODEL=base
+      - JARVIS_WHISPER_DEVICE=cpu
+      - JARVIS_WHISPER_COMPUTE_TYPE=int8
+      - JARVIS_STT_LANGUAGE=auto
+      - JARVIS_PARTIAL_RESULTS_INTERVAL=0.3
+      - JARVIS_PIPER_EXECUTABLE=/usr/local/bin/piper
+      - JARVIS_PIPER_VOICES_DIR=/app/voices
+      - JARVIS_TTS_LENGTH_SCALE=1.0
+      - JARVIS_WAKE_WORD=hey jarvis
+      - JARVIS_WAKE_WORD_PROVIDER=openwakeword
+      - JARVIS_WAKE_WORD_SENSITIVITY=0.5
+      - JARVIS_SILENCE_TIMEOUT_SEC=1.5
+      - JARVIS_MAX_COMMAND_DURATION=30.0
+      - JARVIS_INTERRUPT_ENERGY_THRESHOLD=0.03
+      - JARVIS_DEFAULT_LANGUAGE=en
+      - JARVIS_SUPPORTED_LANGUAGES=en,hi
+    volumes:
+      - ../models:/app/models
+      - ../voices:/app/voices
+    deploy:
+      resources:
+        limits:
+          cpus: "4"
+          memory: 4G
+        reservations:
+          memory: 2G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
