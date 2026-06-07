@@ -58,6 +58,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await mongodb.connect()
     await mongodb.ensure_indexes()
 
+    # Initialize the multi-agent system
+    from agents_v2.init import initialize_agent_system
+    await initialize_agent_system()
+
     # Initialize voice services
     await piper_service.initialize()
     await whisper_service.initialize()
@@ -80,6 +84,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await voice_service.close()
     await piper_service.close()
     await whisper_service.close()
+
+    # Shutdown agent system
+    from agents_v2.init import shutdown_agent_system
+    await shutdown_agent_system()
 
     # Close connections
     await mongodb.disconnect()
@@ -232,6 +240,10 @@ app.include_router(memory.router)
 app.include_router(tasks.router)
 app.include_router(agents.router)
 app.include_router(admin.router)
+
+# Register v2 agent API (LangGraph-powered multi-agent system)
+from api.agents_v2 import router as agents_v2_router
+app.include_router(agents_v2_router)
 
 # Auth routes are in api/auth.py (included via chat router's dependency)
 
