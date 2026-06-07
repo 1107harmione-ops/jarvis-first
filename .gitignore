@@ -53,6 +53,7 @@ android/jarvis-android/local.properties
 .cargo/
 
 # Agent config (personal)
+.claude.json
 .claude/
 .codex/
 .codebuddy/
@@ -81,6 +82,49 @@ android/jarvis-android/local.properties
 .understand-anything/
 .understand-anything-plugin
 .render/
+
+# Personal config
+.gitconfig
+.wget-hsts
+.launchpadlib/
+
+# Package managers
+.npm/
+.nvm/
+
+# Old / duplicate projects
+1/
+Jarvis-Ai-Assistant/
+Jarvis-Render-Deploy/
+Understand-Anything/
+agentic-context-engine/
+android-project/
+coding/
+jarvis-android/
+jarvis-memory/
+jarvis-voice/
+kimi-code/
+mcp-servers/
+odysseus/
+pc/
+planed_jv/
+scripts/
+skills/
+storage/
+
+# Old root docs (superseded by README.md)
+DESIGN.md
+GEMINI.md
+
+# Other projects / tools
+.kiro/
+packages/adapter-utils/
+packages/adapters/
+packages/db/
+packages/mcp-server/
+packages/plugins/
+packages/shared/
+packages/skills-catalog/
 
 # Session data
 .kimi-code/sessions/
