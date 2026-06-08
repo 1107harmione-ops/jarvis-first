@@ -57,3 +57,4 @@ redis_data/
 *.db
 data/
 models/vosk-*/
+bend-jarvis-first/
