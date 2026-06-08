@@ -29,6 +29,8 @@ WORKDIR /app
 # Install runtime system dependencies only
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libsndfile1 \
+    curl \
+    unzip \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
