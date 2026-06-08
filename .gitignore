@@ -131,6 +131,14 @@ packages/skills-catalog/
 .kimi-code/logs/
 .kimi-code/telemetry/
 
+# Flutter / Dart
+.pub-cache/
+flutter/
+
+# Backend runtime data
+backend/data/
+backend/models/
+
 # Packages
 node_modules/
 .pnpm-store/

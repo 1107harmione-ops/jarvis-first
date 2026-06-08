@@ -9,6 +9,7 @@ from typing import AsyncGenerator
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
 from app.core.exceptions import JarvisError, NotFoundError, ValidationError
@@ -199,3 +200,13 @@ app.include_router(voice_router)
 app.include_router(reminders_router)
 app.include_router(memory_router)
 app.include_router(search_router)
+
+# ── Mount Static Files ────────────────────────────────────────────
+from pathlib import Path
+
+static_dir = Path(__file__).resolve().parent.parent / "static"
+if static_dir.is_dir():
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+    logger.info("static_files_mounted", path=str(static_dir))
+else:
+    logger.warning("static_dir_not_found", path=str(static_dir))

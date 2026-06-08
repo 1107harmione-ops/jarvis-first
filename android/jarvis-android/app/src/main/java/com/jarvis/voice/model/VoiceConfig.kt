@@ -5,7 +5,7 @@ package com.jarvis.voice.model
  * Can be persisted via VoiceSettingsStore and updated at runtime.
  */
 data class VoiceConfig(
-    val serverUrl: String = "wss://jarvis-first-ko81.onrender.com/ws/voice",
+    val serverUrl: String = "wss://bend-jarvis-first.onrender.com/ws/voice",
     val sampleRate: Int = 16000,
     val language: String = "en",
     val uiLanguage: String = "en",
