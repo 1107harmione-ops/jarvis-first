@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  jarvis:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+    environment:
+      - DEBUG=false
+      - LOG_LEVEL=INFO

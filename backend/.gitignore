@@ -52,3 +52,8 @@ redis_data/
 # Vector models (sentence-transformers cache)
 .models/
 .cache/
+
+# Jarvis Voice Assistant
+*.db
+data/
+models/vosk-*/
