@@ -16,7 +16,7 @@ class VoiceSettingsStore(context: Context) {
     // ---- Getters with defaults matching VoiceConfig ----
 
     fun getServerUrl(): String =
-        prefs.getString(KEY_SERVER_URL, "wss://bend-jarvis-first.onrender.com/ws/voice") ?: "wss://bend-jarvis-first.onrender.com/ws/voice"
+        prefs.getString(KEY_SERVER_URL, "wss://bend-jarvis-first-3a0p.onrender.com/ws/voice") ?: "wss://bend-jarvis-first-3a0p.onrender.com/ws/voice"
 
     fun getLanguage(): String =
         prefs.getString(KEY_LANGUAGE, "en") ?: "en"

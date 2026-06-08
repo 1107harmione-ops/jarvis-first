@@ -184,6 +184,16 @@ async def health():
     }
 
 
+@app.get("/api/admin/health")
+async def admin_health():
+    """Render health check endpoint."""
+    return {
+        "status": "ok",
+        "version": settings.APP_VERSION,
+        "app": settings.APP_NAME,
+    }
+
+
 # ── Mount Routers ─────────────────────────────────────────────
 
 from app.tasks.api import router as tasks_router
