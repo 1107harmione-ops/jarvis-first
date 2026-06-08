@@ -71,3 +71,40 @@ class TestVoiceAPI:
             "text": "",
         })
         assert response.status_code == 400
+
+    async def test_voice_create_note(self, client: AsyncClient):
+        response = await client.post("/api/voice/command", json={
+            "text": "create a note about project ideas",
+        })
+        assert response.status_code == 200
+        data = response.json()
+        assert data["intent"] == "NOTE_CREATE"
+        assert "Note created" in data["spoken_response"]
+        assert data["data"] is not None
+
+    async def test_voice_search_notes(self, client: AsyncClient):
+        await client.post("/api/voice/command", json={
+            "text": "create a note about Python tips",
+        })
+
+        response = await client.post("/api/voice/command", json={
+            "text": "search my notes about Python",
+        })
+        assert response.status_code == 200
+        data = response.json()
+        assert data["intent"] == "NOTE_SEARCH"
+        assert "Found 1 note" in data["spoken_response"]
+        assert "python" in data["spoken_response"]
+
+    async def test_voice_delete_note(self, client: AsyncClient):
+        await client.post("/api/voice/command", json={
+            "text": "create a note about temporary thoughts",
+        })
+
+        response = await client.post("/api/voice/command", json={
+            "text": "delete my note about temporary thoughts",
+        })
+        assert response.status_code == 200
+        data = response.json()
+        assert data["intent"] == "NOTE_DELETE"
+        assert "deleted" in data["spoken_response"]

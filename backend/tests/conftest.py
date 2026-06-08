@@ -1,48 +1,61 @@
 """Test fixtures and configuration."""
-
 from __future__ import annotations
+
+import os
 
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy import create_engine, text
 
-from app.database.connection import Base
-from app.main import app
-from app.core.deps import get_db
+from app.core.config import settings
 
-# Use file-based SQLite for tests (can inspect if needed)
-TEST_DATABASE_URL = "sqlite+aiosqlite:///./test_jarvis.db"
+# Override database URL to use test file BEFORE any app imports
+TEST_DB_URL = "sqlite+aiosqlite:///./test_jarvis.db"
+settings.DATABASE_URL = TEST_DB_URL
+os.environ["DATABASE_URL"] = TEST_DB_URL
 
-test_engine = create_async_engine(TEST_DATABASE_URL, echo=False)
-TestSessionLocal = async_sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
+
+def _init_db():
+    """Synchronously create tables for testing."""
+    import app.database.models  # noqa: F401
+    from app.database.connection import Base
+    sync_url = TEST_DB_URL.replace("+aiosqlite", "")
+    sync_engine = create_engine(sync_url)
+    Base.metadata.create_all(sync_engine)
+    sync_engine.dispose()
+
+    # Create FTS5 tables
+    import sqlalchemy as sa
+    fts_engine = create_engine(sync_url)
+    with fts_engine.begin() as conn:
+        from app.database.fts import FTS_SETUP_SQL
+        for statement in FTS_SETUP_SQL.strip().split("\n\n"):
+            stmt = statement.strip()
+            if stmt:
+                conn.execute(sa.text(stmt))
+    fts_engine.dispose()
+
+
+_init_db()
 
 
 @pytest_asyncio.fixture(autouse=True)
-async def setup_database():
-    """Create tables before each test, drop after."""
-    async with test_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+async def clean_db():
+    """Clean all table data before each test."""
+    import app.database.models  # noqa: F401 — ensure all models loaded
+    from app.database.connection import Base, async_session_factory
+    async with async_session_factory() as session:
+        for table in reversed(Base.metadata.sorted_tables):
+            await session.execute(text(f"DELETE FROM {table.name}"))
+        await session.commit()
     yield
-    async with test_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-
-
-async def override_get_db():
-    """Override dependency to use test database."""
-    async with TestSessionLocal() as session:
-        try:
-            yield session
-        finally:
-            await session.close()
-
-
-app.dependency_overrides[get_db] = override_get_db
 
 
 @pytest_asyncio.fixture
 async def client() -> AsyncClient:
-    """HTTP test client."""
+    """Provide an async test client with lifespan support."""
+    from app.main import app
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac

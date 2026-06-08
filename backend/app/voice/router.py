@@ -18,11 +18,16 @@ class IntentType(str, Enum):
 
     NOTE_CREATE = "NOTE_CREATE"
     NOTE_SEARCH = "NOTE_SEARCH"
+    NOTE_UPDATE = "NOTE_UPDATE"
+    NOTE_DELETE = "NOTE_DELETE"
 
     REMINDER_CREATE = "REMINDER_CREATE"
 
     MEMORY_SAVE = "MEMORY_SAVE"
     MEMORY_RECALL = "MEMORY_RECALL"
+    MEMORY_FORGET = "MEMORY_FORGET"
+
+    GLOBAL_SEARCH = "GLOBAL_SEARCH"
 
     UNKNOWN = "UNKNOWN"
 
@@ -67,17 +72,69 @@ REGEX_PATTERNS: list[tuple[re.Pattern, IntentType, list[str]]] = [
         re.IGNORECASE,
     ), IntentType.TASK_COMPLETE, ["title"]),
 
-    # TASK_DELETE
+    # TASK_DELETE — require "task" so "delete my note" doesn't match
     (re.compile(
-        r"(?:delete|remove|erase)\s+(?:my\s+)?(?:task\s+)?(?:called\s+)?(?:titled\s+)?['\"]?(.+?)['\"]?$",
+        r"(?:delete|remove|erase)\s+(?:my\s+)?task\s+(?:called\s+)?(?:titled\s+)?['\"]?(.+?)['\"]?$",
         re.IGNORECASE,
     ), IntentType.TASK_DELETE, ["title"]),
 
-    # TASK_SEARCH
+    # TASK_SEARCH — require "task" so "find my notes" doesn't match
     (re.compile(
-        r"(?:search|find|look\s+(?:for|up))\s+(?:my\s+)?(?:tasks?\s+(?:about|for|with|containing)\s+)?['\"]?(.+?)['\"]?$",
+        r"(?:search|find|look\s+(?:for|up))\s+(?:my\s+)?tasks?\s+(?:about|for|with|containing)\s+['\"]?(.+?)['\"]?$",
         re.IGNORECASE,
     ), IntentType.TASK_SEARCH, ["query"]),
+    # simpler TASK_SEARCH without qualifier
+    (re.compile(
+        r"(?:search|find)\s+(?:my\s+)?tasks?\s+['\"]?(.+?)['\"]?$",
+        re.IGNORECASE,
+    ), IntentType.TASK_SEARCH, ["query"]),
+
+    # NOTE_CREATE
+    (re.compile(
+        r"(?:create|add|make|new|write)\s+(?:a\s+)?note\s+(?:about|for|on|called|titled)?\s*['\"]?(.+?)['\"]?$",
+        re.IGNORECASE,
+    ), IntentType.NOTE_CREATE, ["title"]),
+
+    # NOTE_SEARCH — require "note" so "search my tasks" doesn't match
+    (re.compile(
+        r"(?:search|find|look\s+(?:for|up))\s+(?:my\s+)?notes?\s+(?:about|for|with|containing)\s+['\"]?(.+?)['\"]?$",
+        re.IGNORECASE,
+    ), IntentType.NOTE_SEARCH, ["query"]),
+    # simpler NOTE_SEARCH without qualifier
+    (re.compile(
+        r"(?:search|find)\s+(?:my\s+)?notes?\s+['\"]?(.+?)['\"]?$",
+        re.IGNORECASE,
+    ), IntentType.NOTE_SEARCH, ["query"]),
+
+    # NOTE_UPDATE — require "note"
+    (re.compile(
+        r"(?:update|edit|change|modify)\s+(?:my\s+)?note\s+(?:about|for|on|called|titled)?\s*['\"]?(.+?)['\"]?$",
+        re.IGNORECASE,
+    ), IntentType.NOTE_UPDATE, ["title"]),
+
+    # NOTE_DELETE — require "note"
+    (re.compile(
+        r"(?:delete|remove|erase)\s+(?:my\s+)?note\s+(?:about|for|on|called|titled)?\s*['\"]?(.+?)['\"]?$",
+        re.IGNORECASE,
+    ), IntentType.NOTE_DELETE, ["title"]),
+
+    # REMINDER_CREATE
+    (re.compile(
+        r"(?:remind\s+me|set\s+(?:a\s+)?reminder)\s+(?:to\s+)?(.+?)(?:\s+(?:tomorrow|in\s+\d+\s+hours?|at\s+\S+))?$",
+        re.IGNORECASE,
+    ), IntentType.REMINDER_CREATE, ["title"]),
+
+    # MEMORY_FORGET
+    (re.compile(
+        r"(?:forget|erase|delete)\s+(?:that\s+)?(.+?)$",
+        re.IGNORECASE,
+    ), IntentType.MEMORY_FORGET, ["query"]),
+
+    # GLOBAL_SEARCH
+    (re.compile(
+        r"(?:search|find|look\s+(?:for|up))\s+(?:for\s+)?(?:\S+\s+)?(?:about\s+)?(.+?)$",
+        re.IGNORECASE,
+    ), IntentType.GLOBAL_SEARCH, ["query"]),
 ]
 
 FUZZY_THRESHOLD = 75
@@ -98,11 +155,23 @@ FUZZY_PATTERNS: list[tuple[str, IntentType]] = [
     ("search task", IntentType.TASK_SEARCH),
     ("find task", IntentType.TASK_SEARCH),
     ("create note", IntentType.NOTE_CREATE),
+    ("add note", IntentType.NOTE_CREATE),
+    ("new note", IntentType.NOTE_CREATE),
     ("find note", IntentType.NOTE_SEARCH),
+    ("search note", IntentType.NOTE_SEARCH),
+    ("update note", IntentType.NOTE_UPDATE),
+    ("edit note", IntentType.NOTE_UPDATE),
+    ("delete note", IntentType.NOTE_DELETE),
+    ("remove note", IntentType.NOTE_DELETE),
     ("remind me", IntentType.REMINDER_CREATE),
     ("remember", IntentType.MEMORY_SAVE),
     ("recall", IntentType.MEMORY_RECALL),
     ("what do you know", IntentType.MEMORY_RECALL),
+    ("forget", IntentType.MEMORY_FORGET),
+    ("search for", IntentType.GLOBAL_SEARCH),
+    ("find", IntentType.GLOBAL_SEARCH),
+    ("look for", IntentType.GLOBAL_SEARCH),
+    ("look up", IntentType.GLOBAL_SEARCH),
 ]
 
 
@@ -135,7 +204,7 @@ class IntentRouter:
         best_score = 0
         best_intent = IntentType.UNKNOWN
         for pattern_text, intent_type in FUZZY_PATTERNS:
-            score = fuzz.ratio(text, pattern_text)
+            score = fuzz.partial_ratio(text, pattern_text)
             if score > best_score:
                 best_score = score
                 best_intent = intent_type

@@ -34,6 +34,28 @@ class Settings(BaseSettings):
     # TTS
     TTS_VOICE: str = "en-US-AriaNeural"
 
+    # Redis
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+    REDIS_DB: int = 0
+    REDIS_PASSWORD: str = ""
+    REDIS_URL: str = ""
+
+    @property
+    def redis_url(self) -> str:
+        if self.REDIS_URL:
+            return self.REDIS_URL
+        if self.REDIS_PASSWORD:
+            return f"redis://:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+
+    # RQ
+    RQ_QUEUE_NAME: str = "jarvis"
+    RQ_DEFAULT_TIMEOUT: int = 300
+
+    # Reminder checker
+    REMINDER_CHECK_INTERVAL: int = 60  # seconds
+
     # Logging
     LOG_LEVEL: str = "INFO"
     LOG_FORMAT: str = "json"

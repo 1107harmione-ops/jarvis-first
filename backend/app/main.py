@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
@@ -12,7 +13,7 @@ from fastapi.responses import JSONResponse
 from app.core.config import settings
 from app.core.exceptions import JarvisError, NotFoundError, ValidationError
 from app.core.logger import get_logger, setup_logging
-from app.database.connection import engine
+from app.database.connection import async_session_factory, engine
 from app.database.migrations import create_tables
 
 # Setup logging on import
@@ -43,10 +44,20 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     except Exception as e:
         logger.warning("tts_init_skipped", error=str(e))
 
+    # Start background reminder checker
+    reminder_task = asyncio.create_task(_check_reminders_loop())
+    logger.info("reminder_checker_started", interval_seconds=settings.REMINDER_CHECK_INTERVAL)
+
     yield
 
     # ── Shutdown ──
     logger.info("Shutting down Jarvis Voice Assistant")
+    reminder_task.cancel()
+    try:
+        await reminder_task
+    except asyncio.CancelledError:
+        pass
+
     await engine.dispose()
 
     try:
@@ -62,6 +73,59 @@ app = FastAPI(
     version=settings.APP_VERSION,
     lifespan=lifespan,
 )
+
+
+# ── Background Reminder Checker ──────────────────────────────────
+
+
+async def _check_reminders_loop() -> None:
+    """Periodically check for due reminders and fire them."""
+    while True:
+        try:
+            from app.reminders.schemas import ReminderUpdate
+            from app.reminders.service import reminder_service
+
+            async with async_session_factory() as db:
+                due = await reminder_service.get_due(db)
+                for reminder in due:
+                    await reminder_service.mark_triggered(db, reminder.id)
+                    logger.info(
+                        "reminder_fired",
+                        reminder_id=reminder.id,
+                        title=reminder.title,
+                    )
+                    # For repeat reminders, reschedule
+                    if reminder.repeat_type == "daily":
+                        new_time = reminder.reminder_time.replace(
+                            day=reminder.reminder_time.day + 1
+                        )
+                        await reminder_service.update(
+                            db,
+                            reminder.id,
+                            ReminderUpdate(
+                                reminder_time=new_time,
+                                triggered=False,
+                                status="pending",
+                            ),
+                        )
+                    elif reminder.repeat_type == "weekly":
+                        new_time = reminder.reminder_time.replace(
+                            day=reminder.reminder_time.day + 7
+                        )
+                        await reminder_service.update(
+                            db,
+                            reminder.id,
+                            ReminderUpdate(
+                                reminder_time=new_time,
+                                triggered=False,
+                                status="pending",
+                            ),
+                        )
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            logger.error("reminder_check_error", error=str(e))
+        await asyncio.sleep(settings.REMINDER_CHECK_INTERVAL)
 
 # CORS
 app.add_middleware(
@@ -122,8 +186,16 @@ async def health():
 # ── Mount Routers ─────────────────────────────────────────────
 
 from app.tasks.api import router as tasks_router
+from app.notes.api import router as notes_router
 from app.api.voice import router as voice_router
+from app.api.reminders import router as reminders_router
+from app.api.memory import router as memory_router
+from app.search.api import router as search_router
 
 # Note: routers already have their own prefix (e.g., /api/tasks, /api/voice)
 app.include_router(tasks_router)
+app.include_router(notes_router)
 app.include_router(voice_router)
+app.include_router(reminders_router)
+app.include_router(memory_router)
+app.include_router(search_router)
